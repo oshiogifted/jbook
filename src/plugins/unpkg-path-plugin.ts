@@ -16,7 +16,7 @@ const fileCache = localforage.createInstance( {
 	console.log(color);
 })() //IIFE */
 
-export const unpkgPathPlugin = () => {
+export const unpkgPathPlugin = (inputCode: string) => {
 	return {
 		name: 'unpkg-path-plugin',
 		setup(build: esbuild.PluginBuild) {
@@ -44,10 +44,7 @@ export const unpkgPathPlugin = () => {
 				if (args.path === 'index.js') {
 					return {
 						loader: 'jsx',
-						contents: `
-              import React, { useState } from 'react-select';
-              console.log(React, useState);
-            `
+						contents: inputCode
 					};
 				}
 
