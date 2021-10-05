@@ -1,6 +1,4 @@
 import * as esbuild from 'esbuild-wasm';
-import { fetchPlugin } from './fetch-plugin';
-
 
 // testing IndexedDB
 /* (async () => {

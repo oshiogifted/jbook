@@ -17,10 +17,10 @@ const fileCache = localforage.createInstance({
 })() //IIFE */
 
 export const fetchPlugin = (inputCode: string) => {
-  return {
-    name: 'fetch-plugin',
-    setup(build: esbuild.PluginBuild) {
-      build.onLoad({ filter: /.*/, namespace: 'a' }, async (args: any) => {
+	return {
+		name: 'fetch-plugin',
+		setup(build: esbuild.PluginBuild) {
+			build.onLoad({ filter: /.*/, namespace: 'a' }, async (args: any) => {
 				console.log('onLoad', args);
 
 				if (args.path === 'index.js') {
@@ -33,19 +33,30 @@ export const fetchPlugin = (inputCode: string) => {
 				/*** Caching with key:value pairs using IndexedDB */
 				// Check to see if we have already fetched this file and if it is in the cache
 				// using args.path as key
-				const cachedResult = await fileCache.getItem<esbuild.OnLoadResult>(args.path);
+				/* 	const cachedResult = await fileCache.getItem<esbuild.OnLoadResult>(args.path);
 				// If it is, return it immediately
 				if (cachedResult) {
 					return cachedResult;
-				}
+				} */
 				// If not, make a fetch and...
 				// fetch pkg from unpkg using axios
 				const { data, request } = await axios.get(args.path);
 				//console.log("fetching from unpkg - ", data);
 				//console.log('axios response request -', request);
+				//console.log('args.path - ', args.path);
+
+				const fileType = args.path.match(/.css$/) ? 'css' : 'jsx';
+				const contents =
+					fileType === 'css'
+						? `
+          const style = document.createElement('style');
+          style.innerText = 'body { background-color: "red" }';
+          document.head.appendChild(style);        
+         `
+						: data;
 				const result: esbuild.OnLoadResult = {
 					loader: 'jsx', // just so esbuild can understand that it may have to parse some jsx in the file
-					contents: data,
+					contents: contents,
 					resolveDir: new URL('./', request.responseURL).pathname
 				};
 
@@ -54,6 +65,6 @@ export const fetchPlugin = (inputCode: string) => {
 
 				return result;
 			});
-    }
-  }
-}
+		}
+	};
+};
