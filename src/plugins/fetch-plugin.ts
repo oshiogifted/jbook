@@ -46,11 +46,16 @@ export const fetchPlugin = (inputCode: string) => {
 				//console.log('args.path - ', args.path);
 
 				const fileType = args.path.match(/.css$/) ? 'css' : 'jsx';
+
+				const escapedCSS = data
+					.replace(/\n/g, '') // find any new line chars and replace them with an empty string (collapse css into one single line)
+					.replace(/"/g, '\\"') // find any double quotes and escape them
+					.replace(/'/g, "\\'"); // find any single quotes and escape them
 				const contents =
 					fileType === 'css'
 						? `
           const style = document.createElement('style');
-          style.innerText = 'body { background-color: "red" }';
+          style.innerText = '${escapedCSS}';
           document.head.appendChild(style);        
          `
 						: data;
