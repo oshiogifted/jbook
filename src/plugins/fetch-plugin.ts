@@ -7,61 +7,68 @@ const fileCache = localforage.createInstance({
 	name: 'filecache'
 });
 
-// testing IndexedDB
-/* (async () => {
-	await fileCache.setItem('color', 'red');
-
-	const color = await fileCache.getItem('color');
-
-	console.log(color);
-})() //IIFE */
-
 export const fetchPlugin = (inputCode: string) => {
 	return {
 		name: 'fetch-plugin',
 		setup(build: esbuild.PluginBuild) {
-			build.onLoad({ filter: /.*/, namespace: 'a' }, async (args: any) => {
-				console.log('onLoad', args);
+			build.onLoad({ filter: /(^index\.js$)/ }, () => {
+				return {
+					loader: 'jsx',
+					contents: inputCode
+				};
+			});
 
-				if (args.path === 'index.js') {
-					return {
-						loader: 'jsx',
-						contents: inputCode
-					};
-				}
-
+			/// TODO: remove duplication for .CSS and .JS onLoad
+			build.onLoad({ filter: /.css$/ }, async (args: any) => {
 				/*** Caching with key:value pairs using IndexedDB */
 				// Check to see if we have already fetched this file and if it is in the cache
 				// using args.path as key
-				/* 	const cachedResult = await fileCache.getItem<esbuild.OnLoadResult>(args.path);
+				const cachedResult = await fileCache.getItem<esbuild.OnLoadResult>(args.path);
 				// If it is, return it immediately
 				if (cachedResult) {
 					return cachedResult;
-				} */
+				}
 				// If not, make a fetch and...
 				// fetch pkg from unpkg using axios
 				const { data, request } = await axios.get(args.path);
-				//console.log("fetching from unpkg - ", data);
-				//console.log('axios response request -', request);
-				//console.log('args.path - ', args.path);
-
-				const fileType = args.path.match(/.css$/) ? 'css' : 'jsx';
 
 				const escapedCSS = data
 					.replace(/\n/g, '') // find any new line chars and replace them with an empty string (collapse css into one single line)
 					.replace(/"/g, '\\"') // find any double quotes and escape them
 					.replace(/'/g, "\\'"); // find any single quotes and escape them
-				const contents =
-					fileType === 'css'
-						? `
+				const contents = `
           const style = document.createElement('style');
           style.innerText = '${escapedCSS}';
           document.head.appendChild(style);        
-         `
-						: data;
+         `;
 				const result: esbuild.OnLoadResult = {
 					loader: 'jsx', // just so esbuild can understand that it may have to parse some jsx in the file
 					contents: contents,
+					resolveDir: new URL('./', request.responseURL).pathname
+				};
+
+				// ...store response in cache
+				await fileCache.setItem(args.path, result);
+
+				return result;
+			});
+
+			build.onLoad({ filter: /.*/, namespace: 'a' }, async (args: any) => {
+				/*** Caching with key:value pairs using IndexedDB */
+				// Check to see if we have already fetched this file and if it is in the cache
+				// using args.path as key
+				const cachedResult = await fileCache.getItem<esbuild.OnLoadResult>(args.path);
+				// If it is, return it immediately
+				if (cachedResult) {
+					return cachedResult;
+				}
+				// If not, make a fetch and...
+				// fetch pkg from unpkg using axios
+				const { data, request } = await axios.get(args.path);
+
+				const result: esbuild.OnLoadResult = {
+					loader: 'jsx', // just so esbuild can understand that it may have to parse some jsx in the file
+					contents: data,
 					resolveDir: new URL('./', request.responseURL).pathname
 				};
 
