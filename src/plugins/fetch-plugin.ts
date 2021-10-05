@@ -18,8 +18,9 @@ export const fetchPlugin = (inputCode: string) => {
 				};
 			});
 
-			/// TODO: remove duplication for .CSS and .JS onLoad
-			build.onLoad({ filter: /.css$/ }, async (args: any) => {
+			// ESBuild will still execute this onLoad() even if it does not return anything
+			// It still executes other onLoad functions
+			build.onLoad({ filter: /.*/ }, async (args: any) => {
 				/*** Caching with key:value pairs using IndexedDB */
 				// Check to see if we have already fetched this file and if it is in the cache
 				// using args.path as key
@@ -28,6 +29,9 @@ export const fetchPlugin = (inputCode: string) => {
 				if (cachedResult) {
 					return cachedResult;
 				}
+			});
+      
+			build.onLoad({ filter: /.css$/ }, async (args: any) => {
 				// If not, make a fetch and...
 				// fetch pkg from unpkg using axios
 				const { data, request } = await axios.get(args.path);
@@ -54,14 +58,6 @@ export const fetchPlugin = (inputCode: string) => {
 			});
 
 			build.onLoad({ filter: /.*/, namespace: 'a' }, async (args: any) => {
-				/*** Caching with key:value pairs using IndexedDB */
-				// Check to see if we have already fetched this file and if it is in the cache
-				// using args.path as key
-				const cachedResult = await fileCache.getItem<esbuild.OnLoadResult>(args.path);
-				// If it is, return it immediately
-				if (cachedResult) {
-					return cachedResult;
-				}
 				// If not, make a fetch and...
 				// fetch pkg from unpkg using axios
 				const { data, request } = await axios.get(args.path);
