@@ -13,7 +13,8 @@ const App = () => {
 	const startService = async () => {
 		ref.current = await esbuild.startService({
 			worker: true,
-			wasmURL: '/esbuild.wasm' // fetch binary from public dir
+			// fetch binary from unpkg (isntead of public dir (not wise to move stuff from node_modules as we did))
+			wasmURL: 'https://unpkg.com/esbuild-wasm@0.8.27/esbuild.wasm'
 		});
 		//console.log(service); // using "transform()" to transpile our code, and "build()" to bundle
 	};
@@ -36,13 +37,10 @@ const App = () => {
 
 		// bundling
 		const result = await ref.current.build({
-			entryPoints: ['index.js'],
+			entryPoints: [ 'index.js' ],
 			bundle: true,
 			write: false,
-			plugins: [
-				unpkgPathPlugin(),
-				fetchPlugin(input)
-			],
+			plugins: [ unpkgPathPlugin(), fetchPlugin(input) ],
 			define: {
 				'process.env.NODE_ENV': '"production"',
 				global: 'window'
