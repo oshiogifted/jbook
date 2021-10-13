@@ -6,6 +6,7 @@ import { fetchPlugin } from './plugins/fetch-plugin';
 
 const App = () => {
 	const ref = useRef<any>();
+	const iframeRef = useRef<any>();
 	const [ input, setInput ] = useState('');
 	const [ code, setCode ] = useState('');
 
@@ -46,16 +47,30 @@ const App = () => {
 				global: 'window'
 			}
 		});
-		console.log(result);
-		setCode(result.outputFiles[0].text);
+		//console.log(result);
+		//setCode(result.outputFiles[0].text);
+
+		// bundled code is written in <textarea/>
+		// postMessage contains bundled code
+		// parent posts message with bundled code in it, child has listener for 'message' and executes bundled code using eval
+		iframeRef.current.contentWindow.postMessage(result.outputFiles[0].text, '*');
 	};
 
 	const html = `
-		<script>
-			${code}
-		</script>
+		<html>
+			<head></head>
+			<body>
+				<div id="root"></div>
+				<script>
+				// setup listener for messages in iframe
+				window.addEventListener('message', (event) => {
+					eval(event.data); // execute the event data string via eval
+				}, false);
+				</script>
+			</body>
+		</html>
 	`;
-	
+
 	return (
 		<div>
 			<textarea value={input} onChange={(e) => setInput(e.target.value)} />
@@ -63,7 +78,7 @@ const App = () => {
 				<button onClick={onClick}>Submit</button>
 			</div>
 			<pre>{code}</pre>
-			<iframe sandbox='allow-scripts' srcDoc={html} />
+			<iframe ref={iframeRef} sandbox='allow-scripts' srcDoc={html} />
 		</div>
 	);
 };
