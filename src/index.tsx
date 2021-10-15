@@ -29,6 +29,10 @@ const App = () => {
 		if (!ref.current) {
 			return;
 		}
+
+		// resetting iframe contents when user clicks submit before bundling
+		iframeRef.current.srcdoc = html;
+
 		//console.log(ref.current);
 		// transpiling
 		/* 	const result = await ref.current.transform(input, {
