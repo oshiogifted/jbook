@@ -8,7 +8,6 @@ const App = () => {
 	const ref = useRef<any>();
 	const iframeRef = useRef<any>();
 	const [ input, setInput ] = useState('');
-	const [ code, setCode ] = useState('');
 
 	// Initialize esbuild
 	const startService = async () => {
@@ -87,8 +86,7 @@ const App = () => {
 			<div>
 				<button onClick={onClick}>Submit</button>
 			</div>
-			<pre>{code}</pre>
-			<iframe ref={iframeRef} sandbox='allow-scripts' srcDoc={html} />
+			<iframe title='preview' ref={iframeRef} sandbox='allow-scripts' srcDoc={html} />
 		</div>
 	);
 };
