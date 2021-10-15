@@ -64,7 +64,13 @@ const App = () => {
 				<script>
 				// setup listener for messages in iframe
 				window.addEventListener('message', (event) => {
-					eval(event.data); // execute the event data string via eval
+					try {
+						eval(event.data); // execute the event data string via eval
+					} catch (err) {
+						const root = document.querySelector('#root');
+						root.innerHTML = '<div style="color: red;"><h4>Runtime Error</h4>' + err + '</div>'
+						throw err; // or console.error(err) throws error to console so user can see callstack
+					}
 				}, false);
 				</script>
 			</body>
