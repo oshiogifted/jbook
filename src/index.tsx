@@ -23,7 +23,7 @@ const App = () => {
 		startService();
 	}, []);
 
-	const onClick = async (input: string) => {
+	const onClick = async () => {
 		// if the service is not ready, return early
 		if (!ref.current) {
 			return;
@@ -82,20 +82,18 @@ const App = () => {
 
 	return (
 		<div>
-			<textarea 
-				value={input} 
+			<textarea
+				value={input}
 				onChange={(e) => {
-					onClick(e.target.value) // uses a lot of CPU power - not good performance wise
-					setInput(e.target.value)
+					setInput(e.target.value);
 				}}
 			/>
 			<div>
-				{/* <button onClick={onClick}>Submit</button> */}
+				<button onClick={onClick}>Submit</button>
 			</div>
 			<iframe title='preview' ref={iframeRef} sandbox='allow-scripts' srcDoc={html} />
 		</div>
 	);
 };
-
 
 ReactDOM.render(<App />, document.querySelector('#root'));
