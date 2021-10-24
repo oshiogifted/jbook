@@ -6,61 +6,64 @@ import { fetchPlugin } from './plugins/fetch-plugin';
 import CodeEditor from './components/code-editor';
 
 const App = () => {
-	const ref = useRef<any>();
-	const iframeRef = useRef<any>();
-	const [ input, setInput ] = useState('');
+  const ref = useRef<any>();
+  const iframeRef = useRef<any>();
+  const [input, setInput] = useState('');
 
-	// Initialize esbuild
-	const startService = async () => {
-		ref.current = await esbuild.startService({
-			worker: true,
-			// fetch binary from unpkg (isntead of public dir (not wise to move stuff from node_modules as we did))
-			wasmURL: 'https://unpkg.com/esbuild-wasm@0.8.27/esbuild.wasm'
-		});
-		//console.log(service); // using "transform()" to transpile our code, and "build()" to bundle
-	};
+  // Initialize esbuild
+  const startService = async () => {
+    ref.current = await esbuild.startService({
+      worker: true,
+      // fetch binary from unpkg (isntead of public dir (not wise to move stuff from node_modules as we did))
+      wasmURL: 'https://unpkg.com/esbuild-wasm@0.8.27/esbuild.wasm',
+    });
+    //console.log(service); // using "transform()" to transpile our code, and "build()" to bundle
+  };
 
-	useEffect(() => {
-		startService();
-	}, []);
+  useEffect(() => {
+    startService();
+  }, []);
 
-	const onClick = async () => {
-		// if the service is not ready, return early
-		if (!ref.current) {
-			return;
-		}
+  const onClick = async () => {
+    // if the service is not ready, return early
+    if (!ref.current) {
+      return;
+    }
 
-		// resetting iframe contents when user clicks submit before bundling
-		iframeRef.current.srcdoc = html;
+    // resetting iframe contents when user clicks submit before bundling
+    iframeRef.current.srcdoc = html;
 
-		//console.log(ref.current);
-		// transpiling
-		/* 	const result = await ref.current.transform(input, {
+    //console.log(ref.current);
+    // transpiling
+    /* 	const result = await ref.current.transform(input, {
 			loader: 'jsx',
 			target: 'es2015'
 		}); */
 
-		// bundling
-		const result = await ref.current.build({
-			entryPoints: [ 'index.js' ],
-			bundle: true,
-			write: false,
-			plugins: [ unpkgPathPlugin(), fetchPlugin(input) ],
-			define: {
-				'process.env.NODE_ENV': '"production"',
-				global: 'window'
-			}
-		});
-		//console.log(result);
-		//setCode(result.outputFiles[0].text);
+    // bundling
+    const result = await ref.current.build({
+      entryPoints: ['index.js'],
+      bundle: true,
+      write: false,
+      plugins: [unpkgPathPlugin(), fetchPlugin(input)],
+      define: {
+        'process.env.NODE_ENV': '"production"',
+        global: 'window',
+      },
+    });
+    //console.log(result);
+    //setCode(result.outputFiles[0].text);
 
-		// bundled code is written in <textarea/>
-		// postMessage contains bundled code
-		// parent posts message with bundled code in it, child has listener for 'message' and executes bundled code using eval
-		iframeRef.current.contentWindow.postMessage(result.outputFiles[0].text, '*');
-	};
+    // bundled code is written in <textarea/>
+    // postMessage contains bundled code
+    // parent posts message with bundled code in it, child has listener for 'message' and executes bundled code using eval
+    iframeRef.current.contentWindow.postMessage(
+      result.outputFiles[0].text,
+      '*'
+    );
+  };
 
-	const html = `
+  const html = `
 		<html>
 			<head></head>
 			<body>
@@ -81,24 +84,29 @@ const App = () => {
 		</html>
 	`;
 
-	return (
-		<div>
-			<CodeEditor 
-			intialValue='const a = 1;'
-			onChange={(value)  => setInput(value)} 
-			/>
-			<textarea
-				value={input}
-				onChange={(e) => {
-					setInput(e.target.value);
-				}}
-			/>
-			<div>
-				<button onClick={onClick}>Submit</button>
-			</div>
-			<iframe title='preview' ref={iframeRef} sandbox='allow-scripts' srcDoc={html} />
-		</div>
-	);
+  return (
+    <div>
+      <CodeEditor
+        intialValue='const a = 1;'
+        onChange={(value) => setInput(value)}
+      />
+      <textarea
+        value={input}
+        onChange={(e) => {
+          setInput(e.target.value);
+        }}
+      />
+      <div>
+        <button onClick={onClick}>Submit</button>
+      </div>
+      <iframe
+        title='preview'
+        ref={iframeRef}
+        sandbox='allow-scripts'
+        srcDoc={html}
+      />
+    </div>
+  );
 };
 
 ReactDOM.render(<App />, document.querySelector('#root'));
