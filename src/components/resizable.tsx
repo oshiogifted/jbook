@@ -1,4 +1,5 @@
 import './styles/resizable.css';
+import { useEffect } from 'react';
 import { ResizableBox, ResizableBoxProps } from 'react-resizable';
 
 interface ResizableProps {
@@ -6,6 +7,18 @@ interface ResizableProps {
 }
 
 const Resizable: React.FC<ResizableProps> = ({ direction, children }) => {
+  useEffect(() => {
+    const listener = () => {
+      console.log(window.innerWidth, window.innerHeight);
+    };
+    window.addEventListener('resize', listener);
+
+    // cleanup if we ever decide to stop showing Resizable component
+    return () => {
+      window.removeEventListener('resize', listener);
+    };
+  }, []);
+
   // To allow for different direction prop settings (vertical & horizontal)
   let resizableProps: ResizableBoxProps;
 
